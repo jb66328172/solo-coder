@@ -1,7 +1,11 @@
 package com.example.mybatis;
 
+import com.example.mybatis.entity.Clazz;
+import com.example.mybatis.entity.Course;
 import com.example.mybatis.entity.Department;
 import com.example.mybatis.entity.Teacher;
+import com.example.mybatis.mapper.ClazzMapper;
+import com.example.mybatis.mapper.CourseMapper;
 import com.example.mybatis.mapper.DepartmentMapper;
 import com.example.mybatis.mapper.TeacherMapper;
 import com.example.mybatis.util.SqlSessionFactoryUtil;
@@ -22,12 +26,16 @@ public class TestMybatis {
     private SqlSession sqlSession;
     private TeacherMapper teacherMapper;
     private DepartmentMapper departmentMapper;
+    private ClazzMapper clazzMapper;
+    private CourseMapper courseMapper;
 
     @Before
     public void setUp() {
         sqlSession = SqlSessionFactoryUtil.getSqlSession(true);
         teacherMapper = sqlSession.getMapper(TeacherMapper.class);
         departmentMapper = sqlSession.getMapper(DepartmentMapper.class);
+        clazzMapper = sqlSession.getMapper(ClazzMapper.class);
+        courseMapper = sqlSession.getMapper(CourseMapper.class);
     }
 
     @After
@@ -205,5 +213,189 @@ public class TestMybatis {
         } else {
             System.out.println("  暂无教师");
         }
+    }
+
+    @Test
+    public void testSelectClazzWithDetailById() {
+        System.out.println("===== 5. 关联查询：根据班级ID查询班级详情（含班主任、所有课程及授课老师） =====");
+
+        System.out.println("--- 查询班级ID=1（计算机一班） ---");
+        Clazz clazz1 = clazzMapper.selectClazzWithDetailById(1L);
+        assertNotNull("班级不应为null", clazz1);
+        System.out.println("班级名称：" + clazz1.getName());
+        System.out.println("年级：" + clazz1.getGrade());
+        Teacher headTeacher = clazz1.getHeadTeacher();
+        if (headTeacher != null) {
+            System.out.println("班主任：" + headTeacher.getName() + "（" + headTeacher.getTitle() + "）");
+        } else {
+            System.out.println("班主任：暂无");
+        }
+        List<Course> courses = clazz1.getCourses();
+        System.out.println("该班级开设的课程：");
+        if (courses != null && !courses.isEmpty()) {
+            for (Course c : courses) {
+                String teacherName = (c.getTeacher() != null) ? c.getTeacher().getName() : "暂无";
+                System.out.println("  - " + c.getName() + "（" + c.getHours() + "学时，授课老师：" + teacherName + "）");
+            }
+            assertTrue("计算机一班应有3门课程", courses.size() >= 3);
+        } else {
+            System.out.println("  暂无课程");
+        }
+        System.out.println();
+
+        System.out.println("--- 查询班级ID=4（外语一班） ---");
+        Clazz clazz4 = clazzMapper.selectClazzWithDetailById(4L);
+        assertNotNull("班级不应为null", clazz4);
+        System.out.println("班级名称：" + clazz4.getName());
+        System.out.println("年级：" + clazz4.getGrade());
+        Teacher headTeacher4 = clazz4.getHeadTeacher();
+        if (headTeacher4 != null) {
+            System.out.println("班主任：" + headTeacher4.getName() + "（" + headTeacher4.getTitle() + "）");
+        }
+        List<Course> courses4 = clazz4.getCourses();
+        System.out.println("该班级开设的课程：");
+        if (courses4 != null && !courses4.isEmpty()) {
+            for (Course c : courses4) {
+                String teacherName = (c.getTeacher() != null) ? c.getTeacher().getName() : "暂无";
+                System.out.println("  - " + c.getName() + "（" + c.getHours() + "学时，授课老师：" + teacherName + "）");
+            }
+        } else {
+            System.out.println("  暂无课程");
+        }
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectAllWithHeadTeacher() {
+        System.out.println("===== 6. 查询所有班级（带上班主任姓名） =====");
+        List<Clazz> clazzList = clazzMapper.selectAllWithHeadTeacher();
+        System.out.println("共查询到 " + clazzList.size() + " 个班级：");
+        assertEquals("应有4个班级", 4, clazzList.size());
+        for (Clazz c : clazzList) {
+            String headTeacherName = (c.getHeadTeacher() != null) ? c.getHeadTeacher().getName() : "暂无";
+            System.out.println("  - " + c.getName() + "（" + c.getGrade() + "级，班主任：" + headTeacherName + "）");
+            assertNotNull("班主任对象不应为null", c.getHeadTeacher());
+            assertNotNull("班主任姓名不应为null", c.getHeadTeacher().getName());
+        }
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectCourseWithDetailById() {
+        System.out.println("===== 7. 关联查询：根据课程ID查询课程详情（含授课老师和所属班级） =====");
+
+        System.out.println("--- 查询课程ID=1（Java程序设计） ---");
+        Course course1 = courseMapper.selectCourseWithDetailById(1L);
+        assertNotNull("课程不应为null", course1);
+        System.out.println("课程名称：" + course1.getName());
+        System.out.println("学时：" + course1.getHours());
+        Teacher teacher = course1.getTeacher();
+        if (teacher != null) {
+            System.out.println("授课老师：" + teacher.getName() + "（" + teacher.getTitle() + "）");
+            assertEquals("授课老师应为张三", "张三", teacher.getName());
+        }
+        Clazz clazz = course1.getClazz();
+        if (clazz != null) {
+            System.out.println("所属班级：" + clazz.getName() + "（" + clazz.getGrade() + "级）");
+            assertEquals("所属班级应为计算机一班", "计算机一班", clazz.getName());
+        }
+        System.out.println();
+
+        System.out.println("--- 查询课程ID=10（Python编程） ---");
+        Course course10 = courseMapper.selectCourseWithDetailById(10L);
+        assertNotNull("课程不应为null", course10);
+        System.out.println("课程名称：" + course10.getName());
+        System.out.println("学时：" + course10.getHours());
+        Teacher teacher10 = course10.getTeacher();
+        if (teacher10 != null) {
+            System.out.println("授课老师：" + teacher10.getName() + "（" + teacher10.getTitle() + "）");
+        }
+        Clazz clazz10 = course10.getClazz();
+        if (clazz10 != null) {
+            System.out.println("所属班级：" + clazz10.getName() + "（" + clazz10.getGrade() + "级）");
+        }
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectCoursesByTeacherId() {
+        System.out.println("===== 8. 按教师ID查询该教师所有课程 =====");
+
+        System.out.println("--- 查询教师ID=1（张三）的所有课程 ---");
+        List<Course> courses1 = courseMapper.selectByTeacherId(1L);
+        System.out.println("张三老师共教授 " + courses1.size() + " 门课程：");
+        assertEquals("张三应教2门课程", 2, courses1.size());
+        for (Course c : courses1) {
+            String className = (c.getClazz() != null) ? c.getClazz().getName() : "暂无";
+            System.out.println("  - " + c.getName() + "（" + c.getHours() + "学时，班级：" + className + "）");
+        }
+        System.out.println();
+
+        System.out.println("--- 查询教师ID=2（李四）的所有课程 ---");
+        List<Course> courses2 = courseMapper.selectByTeacherId(2L);
+        System.out.println("李四老师共教授 " + courses2.size() + " 门课程：");
+        assertEquals("李四应教2门课程", 2, courses2.size());
+        for (Course c : courses2) {
+            String className = (c.getClazz() != null) ? c.getClazz().getName() : "暂无";
+            System.out.println("  - " + c.getName() + "（" + c.getHours() + "学时，班级：" + className + "）");
+        }
+        System.out.println();
+
+        System.out.println("--- 查询教师ID=9（无部门）的所有课程 ---");
+        List<Course> courses9 = courseMapper.selectByTeacherId(9L);
+        System.out.println("无部门教师共教授 " + courses9.size() + " 门课程：");
+        assertTrue("无部门教师应无课程", courses9.isEmpty());
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectTeacherWithCoursesById() {
+        System.out.println("===== 9. 关联查询：根据教师ID查询教师及其所教课程列表 =====");
+
+        System.out.println("--- 查询教师ID=1（张三） ---");
+        Teacher teacher1 = teacherMapper.selectTeacherWithCoursesById(1L);
+        assertNotNull("教师不应为null", teacher1);
+        System.out.println("教师姓名：" + teacher1.getName());
+        System.out.println("年龄：" + teacher1.getAge());
+        System.out.println("职称：" + teacher1.getTitle());
+        List<Course> courses1 = teacher1.getCourses();
+        System.out.println("所教课程列表：");
+        if (courses1 != null && !courses1.isEmpty()) {
+            for (Course c : courses1) {
+                String className = (c.getClazz() != null) ? c.getClazz().getName() : "暂无";
+                System.out.println("  - " + c.getName() + "（" + c.getHours() + "学时，班级：" + className + "）");
+            }
+            assertEquals("张三应教2门课程", 2, courses1.size());
+        } else {
+            System.out.println("  暂无课程");
+        }
+        System.out.println();
+
+        System.out.println("--- 查询教师ID=5（钱七） ---");
+        Teacher teacher5 = teacherMapper.selectTeacherWithCoursesById(5L);
+        assertNotNull("教师不应为null", teacher5);
+        System.out.println("教师姓名：" + teacher5.getName());
+        System.out.println("年龄：" + teacher5.getAge());
+        System.out.println("职称：" + teacher5.getTitle());
+        List<Course> courses5 = teacher5.getCourses();
+        System.out.println("所教课程列表：");
+        if (courses5 != null && !courses5.isEmpty()) {
+            for (Course c : courses5) {
+                String className = (c.getClazz() != null) ? c.getClazz().getName() : "暂无";
+                System.out.println("  - " + c.getName() + "（" + c.getHours() + "学时，班级：" + className + "）");
+            }
+            assertEquals("钱七应教1门课程", 1, courses5.size());
+        } else {
+            System.out.println("  暂无课程");
+        }
+        System.out.println();
+
+        System.out.println("--- 查询教师ID=9（无部门，无课程） ---");
+        Teacher teacher9 = teacherMapper.selectTeacherWithCoursesById(9L);
+        assertNotNull("教师不应为null", teacher9);
+        System.out.println("教师姓名：" + teacher9.getName());
+        List<Course> courses9 = teacher9.getCourses();
+        System.out.println("所教课程数量：" + (courses9 != null ? courses9.size() : 0));
+        System.out.println();
     }
 }

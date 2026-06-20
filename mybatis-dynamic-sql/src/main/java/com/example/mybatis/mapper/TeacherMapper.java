@@ -12,4 +12,6 @@ public interface TeacherMapper {
     List<Teacher> selectByCondition(Teacher teacher);
 
     int deleteBatchByIds(@Param("ids") List<Long> ids);
+
+    Teacher selectTeacherWithCoursesById(Long id);
 }

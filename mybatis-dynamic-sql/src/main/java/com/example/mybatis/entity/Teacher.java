@@ -1,11 +1,14 @@
 package com.example.mybatis.entity;
 
+import java.util.List;
+
 public class Teacher {
     private Long id;
     private String name;
     private Integer age;
     private String title;
     private Long deptId;
+    private List<Course> courses;
 
     public Teacher() {
     }
@@ -56,6 +59,14 @@ public class Teacher {
 
     public void setDeptId(Long deptId) {
         this.deptId = deptId;
+    }
+
+    public List<Course> getCourses() {
+        return courses;
+    }
+
+    public void setCourses(List<Course> courses) {
+        this.courses = courses;
     }
 
     @Override

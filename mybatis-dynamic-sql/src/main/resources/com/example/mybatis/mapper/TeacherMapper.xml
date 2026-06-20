@@ -51,4 +51,44 @@
         </if>
     </delete>
 
+    <resultMap id="TeacherWithCoursesResultMap" type="Teacher">
+        <id property="id" column="t_id"/>
+        <result property="name" column="t_name"/>
+        <result property="age" column="t_age"/>
+        <result property="title" column="t_title"/>
+        <result property="deptId" column="t_dept_id"/>
+        <collection property="courses" ofType="Course">
+            <id property="id" column="co_id"/>
+            <result property="name" column="co_name"/>
+            <result property="hours" column="hours"/>
+            <result property="teacherId" column="co_teacher_id"/>
+            <result property="classId" column="co_class_id"/>
+            <association property="clazz" javaType="Clazz">
+                <id property="id" column="c_id"/>
+                <result property="name" column="c_name"/>
+                <result property="grade" column="grade"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <select id="selectTeacherWithCoursesById" resultMap="TeacherWithCoursesResultMap">
+        SELECT t.id AS t_id,
+               t.name AS t_name,
+               t.age AS t_age,
+               t.title AS t_title,
+               t.dept_id AS t_dept_id,
+               co.id AS co_id,
+               co.name AS co_name,
+               co.hours AS hours,
+               co.teacher_id AS co_teacher_id,
+               co.class_id AS co_class_id,
+               c.id AS c_id,
+               c.name AS c_name,
+               c.grade AS grade
+        FROM teacher t
+        LEFT JOIN course co ON t.id = co.teacher_id
+        LEFT JOIN clazz c ON co.class_id = c.id
+        WHERE t.id = #{id}
+    </select>
+
 </mapper>
