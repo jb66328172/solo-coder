@@ -10,8 +10,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class TestMybatis {
 
@@ -91,10 +95,46 @@ public class TestMybatis {
             System.out.println(t);
         }
 
-        System.out.println("\n--- 无条件查询（全部） ---");
+        System.out.println("\n--- 无条件查询（全部条件为空，应返回空结果） ---");
         Teacher condition6 = new Teacher();
         List<Teacher> list6 = teacherMapper.selectByCondition(condition6);
         System.out.println("共查询到 " + list6.size() + " 条记录");
+        assertTrue("三条件全空时应返回空结果", list6.isEmpty());
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectByConditionAllEmpty() {
+        System.out.println("===== 边界测试：动态SQL三条件全空 =====");
+
+        System.out.println("--- 所有属性都为null ---");
+        Teacher condition1 = new Teacher();
+        List<Teacher> list1 = teacherMapper.selectByCondition(condition1);
+        System.out.println("所有属性为null，查询结果数：" + list1.size());
+        assertTrue("所有属性为null时应返回空结果", list1.isEmpty());
+
+        System.out.println("\n--- name为空字符串，其他为null ---");
+        Teacher condition2 = new Teacher();
+        condition2.setName("");
+        List<Teacher> list2 = teacherMapper.selectByCondition(condition2);
+        System.out.println("name为空字符串，查询结果数：" + list2.size());
+        assertTrue("name为空字符串时应返回空结果", list2.isEmpty());
+
+        System.out.println("\n--- title为空字符串，其他为null ---");
+        Teacher condition3 = new Teacher();
+        condition3.setTitle("");
+        List<Teacher> list3 = teacherMapper.selectByCondition(condition3);
+        System.out.println("title为空字符串，查询结果数：" + list3.size());
+        assertTrue("title为空字符串时应返回空结果", list3.isEmpty());
+
+        System.out.println("\n--- name和title都为空字符串，deptId为null ---");
+        Teacher condition4 = new Teacher();
+        condition4.setName("");
+        condition4.setTitle("");
+        List<Teacher> list4 = teacherMapper.selectByCondition(condition4);
+        System.out.println("name和title都为空字符串，查询结果数：" + list4.size());
+        assertTrue("三条件全空时应返回空结果", list4.isEmpty());
+
         System.out.println();
     }
 
@@ -104,6 +144,36 @@ public class TestMybatis {
         List<Long> ids = Arrays.asList(8L, 9L);
         int rows = teacherMapper.deleteBatchByIds(ids);
         System.out.println("批量删除ID为8、9的教师，影响行数：" + rows + "\n");
+    }
+
+    @Test
+    public void testDeleteBatchByIdsEmptyList() {
+        System.out.println("===== 边界测试：批量删除空list =====");
+
+        System.out.println("--- 空list删除 ---");
+        List<Long> emptyIds = Collections.emptyList();
+        int rows1 = teacherMapper.deleteBatchByIds(emptyIds);
+        System.out.println("空list批量删除，影响行数：" + rows1);
+        assertEquals("空list删除应影响0行", 0, rows1);
+
+        System.out.println("\n--- new ArrayList() 空列表删除 ---");
+        List<Long> emptyArrayList = new ArrayList<>();
+        int rows2 = teacherMapper.deleteBatchByIds(emptyArrayList);
+        System.out.println("new ArrayList()批量删除，影响行数：" + rows2);
+        assertEquals("空ArrayList删除应影响0行", 0, rows2);
+
+        System.out.println();
+    }
+
+    @Test
+    public void testDeleteBatchByIdsNullList() {
+        System.out.println("===== 边界测试：批量删除null list =====");
+
+        int rows = teacherMapper.deleteBatchByIds(null);
+        System.out.println("null list批量删除，影响行数：" + rows);
+        assertEquals("null list删除应影响0行", 0, rows);
+
+        System.out.println();
     }
 
     @Test
