@@ -72,3 +72,41 @@ INSERT INTO course (name, hours, teacher_id, class_id) VALUES ('线性代数', 4
 INSERT INTO course (name, hours, teacher_id, class_id) VALUES ('大学英语', 64, 7, 4);
 INSERT INTO course (name, hours, teacher_id, class_id) VALUES ('英语口语', 32, 8, 4);
 INSERT INTO course (name, hours, teacher_id, class_id) VALUES ('Python编程', 48, 2, 2);
+
+DROP TABLE IF EXISTS score;
+
+CREATE TABLE score (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    student_name VARCHAR(50) NOT NULL,
+    course_id BIGINT,
+    score DECIMAL(5,1),
+    semester VARCHAR(20),
+    CONSTRAINT fk_score_course FOREIGN KEY (course_id) REFERENCES course(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('李明', 1, 85.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('王芳', 1, 92.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('张华', 1, 78.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('刘强', 1, 58.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('陈静', 1, NULL, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('赵伟', 1, 88.0, '2024-2025-1');
+
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('李明', 2, 76.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('王芳', 2, 89.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('张华', 2, NULL, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('刘强', 2, 65.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('陈静', 2, 95.0, '2024-2025-1');
+
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('李明', 6, 88.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('王芳', 6, 91.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('张华', 6, 72.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('刘强', 6, NULL, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('陈静', 6, 68.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('赵伟', 6, 55.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('孙丽', 6, 82.0, '2024-2025-1');
+
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('周杰', 8, 79.5, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('吴敏', 8, 85.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('郑涛', 8, NULL, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('冯雪', 8, 93.0, '2024-2025-1');
+INSERT INTO score (student_name, course_id, score, semester) VALUES ('许强', 8, 67.5, '2024-2025-1');

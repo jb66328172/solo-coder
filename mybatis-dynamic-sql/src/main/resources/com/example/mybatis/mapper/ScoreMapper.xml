@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mybatis.mapper.ScoreMapper">
+
+    <resultMap id="ScoreWithCourseResultMap" type="Score">
+        <id property="id" column="s_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="courseId" column="course_id"/>
+        <result property="score" column="score"/>
+        <result property="semester" column="semester"/>
+        <association property="course" javaType="Course">
+            <id property="id" column="co_id"/>
+            <result property="name" column="co_name"/>
+            <result property="hours" column="hours"/>
+            <result property="teacherId" column="teacher_id"/>
+            <result property="classId" column="class_id"/>
+        </association>
+    </resultMap>
+
+    <select id="selectByCourseId" resultMap="ScoreWithCourseResultMap">
+        SELECT s.id AS s_id,
+               s.student_name AS student_name,
+               s.course_id AS course_id,
+               s.score AS score,
+               s.semester AS semester,
+               co.id AS co_id,
+               co.name AS co_name,
+               co.hours AS hours,
+               co.teacher_id AS teacher_id,
+               co.class_id AS class_id
+        FROM score s
+        LEFT JOIN course co ON s.course_id = co.id
+        WHERE s.course_id = #{courseId}
+        ORDER BY s.id
+    </select>
+
+    <select id="selectStatisticsByCourseId" resultType="java.util.Map">
+        SELECT
+            AVG(score) AS avg_score,
+            MAX(score) AS max_score,
+            MIN(score) AS min_score,
+            SUM(CASE WHEN score IS NOT NULL AND score >= 60 THEN 1 ELSE 0 END) AS pass_count
+        FROM score
+        WHERE course_id = #{courseId}
+    </select>
+
+    <insert id="insertBatch">
+        <if test="list != null and list.size() > 0">
+            INSERT INTO score (student_name, course_id, score, semester) VALUES
+            <foreach collection="list" item="item" separator=",">
+                (#{item.studentName}, #{item.courseId}, #{item.score}, #{item.semester})
+            </foreach>
+        </if>
+    </insert>
+
+</mapper>

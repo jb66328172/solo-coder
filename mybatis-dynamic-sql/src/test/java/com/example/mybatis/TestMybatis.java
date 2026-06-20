@@ -3,10 +3,12 @@ package com.example.mybatis;
 import com.example.mybatis.entity.Clazz;
 import com.example.mybatis.entity.Course;
 import com.example.mybatis.entity.Department;
+import com.example.mybatis.entity.Score;
 import com.example.mybatis.entity.Teacher;
 import com.example.mybatis.mapper.ClazzMapper;
 import com.example.mybatis.mapper.CourseMapper;
 import com.example.mybatis.mapper.DepartmentMapper;
+import com.example.mybatis.mapper.ScoreMapper;
 import com.example.mybatis.mapper.TeacherMapper;
 import com.example.mybatis.util.SqlSessionFactoryUtil;
 import org.apache.ibatis.session.SqlSession;
@@ -14,10 +16,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -28,6 +32,7 @@ public class TestMybatis {
     private DepartmentMapper departmentMapper;
     private ClazzMapper clazzMapper;
     private CourseMapper courseMapper;
+    private ScoreMapper scoreMapper;
 
     @Before
     public void setUp() {
@@ -36,6 +41,7 @@ public class TestMybatis {
         departmentMapper = sqlSession.getMapper(DepartmentMapper.class);
         clazzMapper = sqlSession.getMapper(ClazzMapper.class);
         courseMapper = sqlSession.getMapper(CourseMapper.class);
+        scoreMapper = sqlSession.getMapper(ScoreMapper.class);
     }
 
     @After
@@ -396,6 +402,133 @@ public class TestMybatis {
         System.out.println("教师姓名：" + teacher9.getName());
         List<Course> courses9 = teacher9.getCourses();
         System.out.println("所教课程数量：" + (courses9 != null ? courses9.size() : 0));
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectByCourseId() {
+        System.out.println("===== 10. 根据课程ID查询该课程所有成绩（关联课程名称） =====");
+
+        System.out.println("--- 查询课程ID=1（Java程序设计）的所有成绩 ---");
+        List<Score> scores1 = scoreMapper.selectByCourseId(1L);
+        System.out.println("共查询到 " + scores1.size() + " 条成绩记录：");
+        for (Score s : scores1) {
+            String courseName = (s.getCourse() != null) ? s.getCourse().getName() : "未知";
+            String scoreStr = (s.getScore() != null) ? s.getScore().toString() : "缺考";
+            System.out.println("  - " + s.getStudentName() + " | 课程：" + courseName + " | 成绩：" + scoreStr + " | 学期：" + s.getSemester());
+        }
+        assertEquals("Java程序设计应有6条成绩", 6, scores1.size());
+        assertNotNull("关联的课程对象不应为null", scores1.get(0).getCourse());
+        assertEquals("关联的课程名称应为Java程序设计", "Java程序设计", scores1.get(0).getCourse().getName());
+        System.out.println();
+
+        System.out.println("--- 查询课程ID=6（高等数学）的所有成绩 ---");
+        List<Score> scores6 = scoreMapper.selectByCourseId(6L);
+        System.out.println("共查询到 " + scores6.size() + " 条成绩记录：");
+        int nullCount = 0;
+        for (Score s : scores6) {
+            String courseName = (s.getCourse() != null) ? s.getCourse().getName() : "未知";
+            String scoreStr = (s.getScore() != null) ? s.getScore().toString() : "缺考";
+            if (s.getScore() == null) nullCount++;
+            System.out.println("  - " + s.getStudentName() + " | 课程：" + courseName + " | 成绩：" + scoreStr + " | 学期：" + s.getSemester());
+        }
+        assertEquals("高等数学应有7条成绩", 7, scores6.size());
+        assertTrue("高等数学应至少有1个缺考", nullCount >= 1);
+        System.out.println();
+
+        System.out.println("--- 查询课程ID=10（Python编程，无成绩数据） ---");
+        List<Score> scores10 = scoreMapper.selectByCourseId(10L);
+        System.out.println("共查询到 " + scores10.size() + " 条成绩记录");
+        assertTrue("Python编程应无成绩数据", scores10.isEmpty());
+        System.out.println();
+    }
+
+    @Test
+    public void testSelectStatisticsByCourseId() {
+        System.out.println("===== 11. 统计某门课的平均分、最高分、最低分、及格人数 =====");
+
+        System.out.println("--- 课程ID=1（Java程序设计）成绩统计 ---");
+        Map<String, Object> stat1 = scoreMapper.selectStatisticsByCourseId(1L);
+        assertNotNull("统计结果不应为null", stat1);
+        BigDecimal avg1 = (BigDecimal) stat1.get("avg_score");
+        BigDecimal max1 = (BigDecimal) stat1.get("max_score");
+        BigDecimal min1 = (BigDecimal) stat1.get("min_score");
+        Long passCount1 = ((Number) stat1.get("pass_count")).longValue();
+        System.out.println("平均分：" + avg1);
+        System.out.println("最高分：" + max1);
+        System.out.println("最低分：" + min1);
+        System.out.println("及格人数：" + passCount1);
+        assertNotNull("平均分不应为null", avg1);
+        assertNotNull("最高分不应为null", max1);
+        assertNotNull("最低分不应为null", min1);
+        assertEquals("Java程序设计应有5人及格", 5L, passCount1.longValue());
+        assertTrue("最高分应>=最低分", max1.compareTo(min1) >= 0);
+        System.out.println();
+
+        System.out.println("--- 课程ID=6（高等数学）成绩统计 ---");
+        Map<String, Object> stat6 = scoreMapper.selectStatisticsByCourseId(6L);
+        BigDecimal avg6 = (BigDecimal) stat6.get("avg_score");
+        BigDecimal max6 = (BigDecimal) stat6.get("max_score");
+        BigDecimal min6 = (BigDecimal) stat6.get("min_score");
+        Long passCount6 = ((Number) stat6.get("pass_count")).longValue();
+        System.out.println("平均分：" + avg6);
+        System.out.println("最高分：" + max6);
+        System.out.println("最低分：" + min6);
+        System.out.println("及格人数：" + passCount6);
+        assertEquals("高等数学应有5人及格（6人有效，赵伟55分不及格）", 5L, passCount6.longValue());
+        System.out.println();
+
+        System.out.println("--- 课程ID=10（Python编程，无成绩）统计 ---");
+        Map<String, Object> stat10 = scoreMapper.selectStatisticsByCourseId(10L);
+        assertNotNull("统计结果不应为null", stat10);
+        BigDecimal avg10 = (BigDecimal) stat10.get("avg_score");
+        Long passCount10 = ((Number) stat10.get("pass_count")).longValue();
+        System.out.println("平均分：" + avg10);
+        System.out.println("及格人数：" + passCount10);
+        assertNull("无成绩时平均分应为null", avg10);
+        assertEquals("无成绩时及格人数应为0", 0L, passCount10.longValue());
+        System.out.println();
+    }
+
+    @Test
+    public void testInsertBatch() {
+        System.out.println("===== 12. 批量插入成绩 =====");
+
+        System.out.println("--- 正常批量插入3条成绩（含1条缺考） ---");
+        List<Score> scores = new ArrayList<>();
+        scores.add(new Score(null, "测试学生A", 3L, new BigDecimal("82.5"), "2024-2025-1"));
+        scores.add(new Score(null, "测试学生B", 3L, new BigDecimal("91.0"), "2024-2025-1"));
+        scores.add(new Score(null, "测试学生C", 3L, null, "2024-2025-1"));
+        int rows = scoreMapper.insertBatch(scores);
+        System.out.println("批量插入影响行数：" + rows);
+        assertEquals("批量插入应影响3行", 3, rows);
+
+        List<Score> verifyScores = scoreMapper.selectByCourseId(3L);
+        System.out.println("插入后课程ID=3共有 " + verifyScores.size() + " 条成绩：");
+        for (Score s : verifyScores) {
+            String scoreStr = (s.getScore() != null) ? s.getScore().toString() : "缺考";
+            System.out.println("  - " + s.getStudentName() + " | 成绩：" + scoreStr);
+        }
+        System.out.println();
+
+        System.out.println("--- 边界测试：批量插入空list ---");
+        int rowsEmpty = scoreMapper.insertBatch(Collections.emptyList());
+        System.out.println("空list批量插入影响行数：" + rowsEmpty);
+        assertEquals("空list插入应影响0行", 0, rowsEmpty);
+        System.out.println();
+
+        System.out.println("--- 边界测试：批量插入null ---");
+        int rowsNull = scoreMapper.insertBatch(null);
+        System.out.println("null批量插入影响行数：" + rowsNull);
+        assertEquals("null插入应影响0行", 0, rowsNull);
+        System.out.println();
+
+        System.out.println("--- 批量插入1条成绩 ---");
+        List<Score> singleList = new ArrayList<>();
+        singleList.add(new Score(null, "单独测试学生", 5L, new BigDecimal("77.5"), "2024-2025-1"));
+        int rowsSingle = scoreMapper.insertBatch(singleList);
+        System.out.println("单条插入影响行数：" + rowsSingle);
+        assertEquals("单条插入应影响1行", 1, rowsSingle);
         System.out.println();
     }
 }
